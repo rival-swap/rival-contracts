@@ -1,6 +1,6 @@
 /**
  *Submitted for verification at BscScan.com on 2021-04-29
-*/
+ */
 
 // File: @openzeppelin/contracts/utils/Context.sol
 
@@ -48,7 +48,10 @@ pragma solidity >=0.6.0 <0.8.0;
 abstract contract Ownable is Context {
     address private _owner;
 
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+    event OwnershipTransferred(
+        address indexed previousOwner,
+        address indexed newOwner
+    );
 
     /**
      * @dev Initializes the contract setting the deployer as the initial owner.
@@ -91,7 +94,10 @@ abstract contract Ownable is Context {
      * Can only be called by the current owner.
      */
     function transferOwnership(address newOwner) public virtual onlyOwner {
-        require(newOwner != address(0), "Ownable: new owner is the zero address");
+        require(
+            newOwner != address(0),
+            "Ownable: new owner is the zero address"
+        );
         emit OwnershipTransferred(_owner, newOwner);
         _owner = newOwner;
     }
@@ -120,7 +126,11 @@ library SafeMath {
      *
      * _Available since v3.4._
      */
-    function tryAdd(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+    function tryAdd(uint256 a, uint256 b)
+        internal
+        pure
+        returns (bool, uint256)
+    {
         uint256 c = a + b;
         if (c < a) return (false, 0);
         return (true, c);
@@ -131,7 +141,11 @@ library SafeMath {
      *
      * _Available since v3.4._
      */
-    function trySub(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+    function trySub(uint256 a, uint256 b)
+        internal
+        pure
+        returns (bool, uint256)
+    {
         if (b > a) return (false, 0);
         return (true, a - b);
     }
@@ -141,7 +155,11 @@ library SafeMath {
      *
      * _Available since v3.4._
      */
-    function tryMul(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+    function tryMul(uint256 a, uint256 b)
+        internal
+        pure
+        returns (bool, uint256)
+    {
         // Gas optimization: this is cheaper than requiring 'a' not being zero, but the
         // benefit is lost if 'b' is also tested.
         // See: https://github.com/OpenZeppelin/openzeppelin-contracts/pull/522
@@ -156,7 +174,11 @@ library SafeMath {
      *
      * _Available since v3.4._
      */
-    function tryDiv(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+    function tryDiv(uint256 a, uint256 b)
+        internal
+        pure
+        returns (bool, uint256)
+    {
         if (b == 0) return (false, 0);
         return (true, a / b);
     }
@@ -166,7 +188,11 @@ library SafeMath {
      *
      * _Available since v3.4._
      */
-    function tryMod(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+    function tryMod(uint256 a, uint256 b)
+        internal
+        pure
+        returns (bool, uint256)
+    {
         if (b == 0) return (false, 0);
         return (true, a % b);
     }
@@ -349,7 +375,9 @@ interface IERC20 {
      *
      * Emits a {Transfer} event.
      */
-    function transfer(address recipient, uint256 amount) external returns (bool);
+    function transfer(address recipient, uint256 amount)
+        external
+        returns (bool);
 
     /**
      * @dev Returns the remaining number of tokens that `spender` will be
@@ -358,7 +386,10 @@ interface IERC20 {
      *
      * This value changes when {approve} or {transferFrom} are called.
      */
-    function allowance(address owner, address spender) external view returns (uint256);
+    function allowance(address owner, address spender)
+        external
+        view
+        returns (uint256);
 
     /**
      * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.
@@ -403,7 +434,11 @@ interface IERC20 {
      * @dev Emitted when the allowance of a `spender` for an `owner` is set by
      * a call to {approve}. `value` is the new allowance.
      */
-    event Approval(address indexed owner, address indexed spender, uint256 value);
+    event Approval(
+        address indexed owner,
+        address indexed spender,
+        uint256 value
+    );
 }
 
 // File: @openzeppelin/contracts/utils/Address.sol
@@ -461,11 +496,17 @@ library Address {
      * https://solidity.readthedocs.io/en/v0.5.11/security-considerations.html#use-the-checks-effects-interactions-pattern[checks-effects-interactions pattern].
      */
     function sendValue(address payable recipient, uint256 amount) internal {
-        require(address(this).balance >= amount, "Address: insufficient balance");
+        require(
+            address(this).balance >= amount,
+            "Address: insufficient balance"
+        );
 
         // solhint-disable-next-line avoid-low-level-calls, avoid-call-value
         (bool success, ) = recipient.call{value: amount}("");
-        require(success, "Address: unable to send value, recipient may have reverted");
+        require(
+            success,
+            "Address: unable to send value, recipient may have reverted"
+        );
     }
 
     /**
@@ -486,7 +527,10 @@ library Address {
      *
      * _Available since v3.1._
      */
-    function functionCall(address target, bytes memory data) internal returns (bytes memory) {
+    function functionCall(address target, bytes memory data)
+        internal
+        returns (bytes memory)
+    {
         return functionCall(target, data, "Address: low-level call failed");
     }
 
@@ -520,7 +564,13 @@ library Address {
         bytes memory data,
         uint256 value
     ) internal returns (bytes memory) {
-        return functionCallWithValue(target, data, value, "Address: low-level call with value failed");
+        return
+            functionCallWithValue(
+                target,
+                data,
+                value,
+                "Address: low-level call with value failed"
+            );
     }
 
     /**
@@ -535,11 +585,16 @@ library Address {
         uint256 value,
         string memory errorMessage
     ) internal returns (bytes memory) {
-        require(address(this).balance >= value, "Address: insufficient balance for call");
+        require(
+            address(this).balance >= value,
+            "Address: insufficient balance for call"
+        );
         require(isContract(target), "Address: call to non-contract");
 
         // solhint-disable-next-line avoid-low-level-calls
-        (bool success, bytes memory returndata) = target.call{value: value}(data);
+        (bool success, bytes memory returndata) = target.call{value: value}(
+            data
+        );
         return _verifyCallResult(success, returndata, errorMessage);
     }
 
@@ -549,8 +604,17 @@ library Address {
      *
      * _Available since v3.3._
      */
-    function functionStaticCall(address target, bytes memory data) internal view returns (bytes memory) {
-        return functionStaticCall(target, data, "Address: low-level static call failed");
+    function functionStaticCall(address target, bytes memory data)
+        internal
+        view
+        returns (bytes memory)
+    {
+        return
+            functionStaticCall(
+                target,
+                data,
+                "Address: low-level static call failed"
+            );
     }
 
     /**
@@ -577,8 +641,16 @@ library Address {
      *
      * _Available since v3.4._
      */
-    function functionDelegateCall(address target, bytes memory data) internal returns (bytes memory) {
-        return functionDelegateCall(target, data, "Address: low-level delegate call failed");
+    function functionDelegateCall(address target, bytes memory data)
+        internal
+        returns (bytes memory)
+    {
+        return
+            functionDelegateCall(
+                target,
+                data,
+                "Address: low-level delegate call failed"
+            );
     }
 
     /**
@@ -645,7 +717,10 @@ library SafeERC20 {
         address to,
         uint256 value
     ) internal {
-        _callOptionalReturn(token, abi.encodeWithSelector(token.transfer.selector, to, value));
+        _callOptionalReturn(
+            token,
+            abi.encodeWithSelector(token.transfer.selector, to, value)
+        );
     }
 
     function safeTransferFrom(
@@ -654,7 +729,10 @@ library SafeERC20 {
         address to,
         uint256 value
     ) internal {
-        _callOptionalReturn(token, abi.encodeWithSelector(token.transferFrom.selector, from, to, value));
+        _callOptionalReturn(
+            token,
+            abi.encodeWithSelector(token.transferFrom.selector, from, to, value)
+        );
     }
 
     /**
@@ -677,7 +755,10 @@ library SafeERC20 {
             (value == 0) || (token.allowance(address(this), spender) == 0),
             "SafeERC20: approve from non-zero to non-zero allowance"
         );
-        _callOptionalReturn(token, abi.encodeWithSelector(token.approve.selector, spender, value));
+        _callOptionalReturn(
+            token,
+            abi.encodeWithSelector(token.approve.selector, spender, value)
+        );
     }
 
     function safeIncreaseAllowance(
@@ -685,8 +766,17 @@ library SafeERC20 {
         address spender,
         uint256 value
     ) internal {
-        uint256 newAllowance = token.allowance(address(this), spender).add(value);
-        _callOptionalReturn(token, abi.encodeWithSelector(token.approve.selector, spender, newAllowance));
+        uint256 newAllowance = token.allowance(address(this), spender).add(
+            value
+        );
+        _callOptionalReturn(
+            token,
+            abi.encodeWithSelector(
+                token.approve.selector,
+                spender,
+                newAllowance
+            )
+        );
     }
 
     function safeDecreaseAllowance(
@@ -694,9 +784,18 @@ library SafeERC20 {
         address spender,
         uint256 value
     ) internal {
-        uint256 newAllowance =
-            token.allowance(address(this), spender).sub(value, "SafeERC20: decreased allowance below zero");
-        _callOptionalReturn(token, abi.encodeWithSelector(token.approve.selector, spender, newAllowance));
+        uint256 newAllowance = token.allowance(address(this), spender).sub(
+            value,
+            "SafeERC20: decreased allowance below zero"
+        );
+        _callOptionalReturn(
+            token,
+            abi.encodeWithSelector(
+                token.approve.selector,
+                spender,
+                newAllowance
+            )
+        );
     }
 
     /**
@@ -710,11 +809,17 @@ library SafeERC20 {
         // we're implementing it ourselves. We use {Address.functionCall} to perform this call, which verifies that
         // the target address contains contract code and also asserts for success in the low-level call.
 
-        bytes memory returndata = address(token).functionCall(data, "SafeERC20: low-level call failed");
+        bytes memory returndata = address(token).functionCall(
+            data,
+            "SafeERC20: low-level call failed"
+        );
         if (returndata.length > 0) {
             // Return data is optional
             // solhint-disable-next-line max-line-length
-            require(abi.decode(returndata, (bool)), "SafeERC20: ERC20 operation did not succeed");
+            require(
+                abi.decode(returndata, (bool)),
+                "SafeERC20: ERC20 operation did not succeed"
+            );
         }
     }
 }
@@ -817,13 +922,15 @@ interface IMasterChef {
 
     function withdraw(uint256 _pid, uint256 _amount) external;
 
-    function enterStaking(uint256 _amount) external;
+    function pendingRival(uint256 _pid, address _user)
+        external
+        view
+        returns (uint256);
 
-    function leaveStaking(uint256 _amount) external;
-
-    function pendingRival(uint256 _pid, address _user) external view returns (uint256);
-
-    function userInfo(uint256 _pid, address _user) external view returns (uint256, uint256);
+    function userInfo(uint256 _pid, address _user)
+        external
+        view
+        returns (uint256, uint256);
 
     function emergencyWithdraw(uint256 _pid) external;
 }
@@ -844,7 +951,7 @@ contract RivalVault is Ownable, Pausable {
     }
 
     IERC20 public immutable token; // $RIVAL token
-    
+
     IMasterChef public immutable masterchef;
 
     mapping(address => UserInfo) public userInfo;
@@ -864,9 +971,18 @@ contract RivalVault is Ownable, Pausable {
     uint256 public withdrawFee = 10; // 0.1%
     uint256 public withdrawFeePeriod = 72 hours; // 3 days
 
-    event Deposit(address indexed sender, uint256 amount, uint256 shares, uint256 lastDepositedTime);
+    event Deposit(
+        address indexed sender,
+        uint256 amount,
+        uint256 shares,
+        uint256 lastDepositedTime
+    );
     event Withdraw(address indexed sender, uint256 amount, uint256 shares);
-    event Harvest(address indexed sender, uint256 performanceFee, uint256 callFee);
+    event Harvest(
+        address indexed sender,
+        uint256 performanceFee,
+        uint256 callFee
+    );
     event Pause();
     event Unpause();
 
@@ -932,7 +1048,9 @@ contract RivalVault is Ownable, Pausable {
 
         totalShares = totalShares.add(currentShares);
 
-        user.rivalAtLastUserAction = user.shares.mul(balanceOf()).div(totalShares);
+        user.rivalAtLastUserAction = user.shares.mul(balanceOf()).div(
+            totalShares
+        );
         user.lastUserActionTime = block.timestamp;
 
         _earn();
@@ -952,7 +1070,7 @@ contract RivalVault is Ownable, Pausable {
      * @dev Only possible when contract not paused.
      */
     function harvest() external notContract whenNotPaused {
-        IMasterChef(masterchef).leaveStaking(0);
+        IMasterChef(masterchef).withdraw(0, 0);
 
         uint256 bal = available();
         uint256 currentPerformanceFee = bal.mul(performanceFee).div(10000);
@@ -991,7 +1109,10 @@ contract RivalVault is Ownable, Pausable {
      * @dev Only callable by the contract admin.
      */
     function setPerformanceFee(uint256 _performanceFee) external onlyAdmin {
-        require(_performanceFee <= MAX_PERFORMANCE_FEE, "performanceFee cannot be more than MAX_PERFORMANCE_FEE");
+        require(
+            _performanceFee <= MAX_PERFORMANCE_FEE,
+            "performanceFee cannot be more than MAX_PERFORMANCE_FEE"
+        );
         performanceFee = _performanceFee;
     }
 
@@ -1000,7 +1121,10 @@ contract RivalVault is Ownable, Pausable {
      * @dev Only callable by the contract admin.
      */
     function setCallFee(uint256 _callFee) external onlyAdmin {
-        require(_callFee <= MAX_CALL_FEE, "callFee cannot be more than MAX_CALL_FEE");
+        require(
+            _callFee <= MAX_CALL_FEE,
+            "callFee cannot be more than MAX_CALL_FEE"
+        );
         callFee = _callFee;
     }
 
@@ -1009,7 +1133,10 @@ contract RivalVault is Ownable, Pausable {
      * @dev Only callable by the contract admin.
      */
     function setWithdrawFee(uint256 _withdrawFee) external onlyAdmin {
-        require(_withdrawFee <= MAX_WITHDRAW_FEE, "withdrawFee cannot be more than MAX_WITHDRAW_FEE");
+        require(
+            _withdrawFee <= MAX_WITHDRAW_FEE,
+            "withdrawFee cannot be more than MAX_WITHDRAW_FEE"
+        );
         withdrawFee = _withdrawFee;
     }
 
@@ -1017,7 +1144,10 @@ contract RivalVault is Ownable, Pausable {
      * @notice Sets withdraw fee period
      * @dev Only callable by the contract admin.
      */
-    function setWithdrawFeePeriod(uint256 _withdrawFeePeriod) external onlyAdmin {
+    function setWithdrawFeePeriod(uint256 _withdrawFeePeriod)
+        external
+        onlyAdmin
+    {
         require(
             _withdrawFeePeriod <= MAX_WITHDRAW_FEE_PERIOD,
             "withdrawFeePeriod cannot be more than MAX_WITHDRAW_FEE_PERIOD"
@@ -1037,8 +1167,11 @@ contract RivalVault is Ownable, Pausable {
      * @notice Withdraw unexpected tokens sent to the $RIVAL Vault
      */
     function inCaseTokensGetStuck(address _token) external onlyAdmin {
-        require(_token != address(token), "Token cannot be same as deposit token");
-        
+        require(
+            _token != address(token),
+            "Token cannot be same as deposit token"
+        );
+
         uint256 amount = IERC20(_token).balanceOf(address(this));
         IERC20(_token).safeTransfer(msg.sender, amount);
     }
@@ -1077,7 +1210,11 @@ contract RivalVault is Ownable, Pausable {
      * @notice Calculates the total pending rewards that can be restaked
      * @return Returns total pending $RIVAL rewards
      */
-    function calculateTotalPendingRivalRewards() external view returns (uint256) {
+    function calculateTotalPendingRivalRewards()
+        external
+        view
+        returns (uint256)
+    {
         uint256 amount = IMasterChef(masterchef).pendingRival(0, address(this));
         amount = amount.add(available());
 
@@ -1107,7 +1244,7 @@ contract RivalVault is Ownable, Pausable {
         uint256 bal = available();
         if (bal < currentAmount) {
             uint256 balWithdraw = currentAmount.sub(bal);
-            IMasterChef(masterchef).leaveStaking(balWithdraw);
+            IMasterChef(masterchef).withdraw(0, balWithdraw);
             uint256 balAfter = available();
             uint256 diff = balAfter.sub(bal);
             if (diff < balWithdraw) {
@@ -1116,13 +1253,17 @@ contract RivalVault is Ownable, Pausable {
         }
 
         if (block.timestamp < user.lastDepositedTime.add(withdrawFeePeriod)) {
-            uint256 currentWithdrawFee = currentAmount.mul(withdrawFee).div(10000);
+            uint256 currentWithdrawFee = currentAmount.mul(withdrawFee).div(
+                10000
+            );
             token.safeTransfer(treasury, currentWithdrawFee);
             currentAmount = currentAmount.sub(currentWithdrawFee);
         }
 
         if (user.shares > 0) {
-            user.rivalAtLastUserAction = user.shares.mul(balanceOf()).div(totalShares);
+            user.rivalAtLastUserAction = user.shares.mul(balanceOf()).div(
+                totalShares
+            );
         } else {
             user.rivalAtLastUserAction = 0;
         }
@@ -1157,7 +1298,7 @@ contract RivalVault is Ownable, Pausable {
     function _earn() internal {
         uint256 bal = available();
         if (bal > 0) {
-            IMasterChef(masterchef).enterStaking(bal);
+            IMasterChef(masterchef).deposit(0, bal);
         }
     }
 
