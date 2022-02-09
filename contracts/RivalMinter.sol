@@ -38,7 +38,7 @@ contract RivalMinter is Ownable, ReentrancyGuard {
     // Safe $RIVAL transfer function, just in case if rounding error causes pool to not have enough $RIVALs.
     function safeRivalTokenTransfer(address _to, uint256 _amount)
         public
-        onlyOwner
+        onlyOperator
         nonReentrant
     {
         uint256 rivalBal = rivalToken.balanceOf(address(this));
@@ -61,7 +61,7 @@ contract RivalMinter is Ownable, ReentrancyGuard {
      * @dev Transfers operator of the contract to a new account (`newOperator`).
      * Can only be called by the current operator.
      */
-    function transferOperator(address newOperator) external onlyOperator {
+    function transferOperator(address newOperator) external onlyOwner {
         require(
             newOperator != address(0),
             "RivalMinter::transferOperator: new operator is the zero address"
@@ -78,7 +78,7 @@ contract RivalMinter is Ownable, ReentrancyGuard {
      */
     function recoverWrongTokens(address _tokenAddress, uint256 _tokenAmount)
         external
-        onlyOperator
+        onlyOwner
     {
         IBEP20(_tokenAddress).transfer(msg.sender, _tokenAmount);
         emit OperatorTokenRecovery(_tokenAddress, _tokenAmount);
