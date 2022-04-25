@@ -562,15 +562,15 @@ abstract contract ReentrancyGuard {
     }
 }
 
-// File: contracts\RivalMinter.sol
+// File: contracts\RewardDistributor.sol
 
 pragma solidity 0.6.12;
 
 
 
 
-// Rival Minter with $RIVAL in the contracts.
-contract RivalMinter is Ownable, ReentrancyGuard {
+// Reward distributor contract for the masterchef
+contract RewardDistributor is Ownable, ReentrancyGuard {
     // The $RIVAL TOKEN!
     IBEP20 public rivalToken;
 
@@ -586,7 +586,7 @@ contract RivalMinter is Ownable, ReentrancyGuard {
 
     modifier onlyOperator() {
         require(
-            _operator == msg.sender,
+            _operator == _msgSender(),
             "operator: caller is not the operator"
         );
         _;
@@ -601,9 +601,10 @@ contract RivalMinter is Ownable, ReentrancyGuard {
 
     // Safe $RIVAL transfer function, just in case if rounding error causes pool to not have enough $RIVALs.
     function safeRivalTokenTransfer(address _to, uint256 _amount)
-        public
+        external
         onlyOperator
         nonReentrant
+        returns (uint256)
     {
         uint256 rivalBal = rivalToken.balanceOf(address(this));
         if (_amount > rivalBal) {
@@ -611,13 +612,15 @@ contract RivalMinter is Ownable, ReentrancyGuard {
         }
         if (_amount > 0) {
             rivalToken.transfer(_to, _amount);
+            return _amount;
         }
+        return 0;
     }
 
     /**
      * @dev operator of the contract
      */
-    function operator() public view returns (address) {
+    function operator() external view returns (address) {
         return _operator;
     }
 
@@ -628,7 +631,7 @@ contract RivalMinter is Ownable, ReentrancyGuard {
     function transferOperator(address newOperator) external onlyOwner {
         require(
             newOperator != address(0),
-            "RivalMinter::transferOperator: new operator is the zero address"
+            "RewardDistributor::transferOperator: new operator is the zero address"
         );
         emit OperatorTransferred(_operator, newOperator);
         _operator = newOperator;
@@ -644,10 +647,11 @@ contract RivalMinter is Ownable, ReentrancyGuard {
         external
         onlyOwner
     {
-        IBEP20(_tokenAddress).transfer(msg.sender, _tokenAmount);
+        IBEP20(_tokenAddress).transfer(_msgSender(), _tokenAmount);
         emit OperatorTokenRecovery(_tokenAddress, _tokenAmount);
     }
 }
+
 
 // File: contracts\RivalMasterChef.sol
 
@@ -672,6 +676,7 @@ contract RivalMasterChef is Ownable {
     // Info of each user.
     struct UserInfo {
         uint256 amount; // How many LP tokens the user has provided.
+        uint256 pendingReward; // Not harvested by some reasons
         uint256 rewardDebt; // Reward debt. See explanation below.
         uint256 unlockedAmount; // Unlocked amount
         uint256[] arrLockedUntil; // Array of lock end time
@@ -704,7 +709,7 @@ contract RivalMasterChef is Ownable {
     // The $RIVAL TOKEN!
     IBEP20 public rivalToken;
     // The $RIVAL Minter!
-    RivalMinter public minter;
+    RewardDistributor public minter;
     // Deposit Fee address
     address public feeAddress;
     // $RIVAL tokens created per block.
@@ -750,7 +755,7 @@ contract RivalMasterChef is Ownable {
 
     constructor(
         IBEP20 _rivalToken,
-        RivalMinter _minter,
+        RewardDistributor _minter,
         address _feeAddress,
         uint256 _rivalPerBlock,
         uint256 _startBlock
@@ -877,7 +882,7 @@ contract RivalMasterChef is Ownable {
 
     // View function to see pending $RIVALs on frontend.
     function pendingRival(uint256 _pid, address _user)
-        external
+        public
         view
         returns (uint256)
     {
@@ -902,7 +907,10 @@ contract RivalMasterChef is Ownable {
                 rivalReward.mul(1e22).div(pool.lpSupply)
             );
         }
-        return user.amount.mul(accRivalPerShare).div(1e22).sub(user.rewardDebt);
+        return
+            user.pendingReward.add(
+                user.amount.mul(accRivalPerShare).div(1e22).sub(user.rewardDebt)
+            );
     }
 
     // Update reward variables for all pools. Be careful of gas spending!
@@ -972,23 +980,19 @@ contract RivalMasterChef is Ownable {
     // Deposit LP tokens to MasterChef for $RIVAL allocation.
     function deposit(uint256 _pid, uint256 _amount) public {
         PoolInfo storage pool = poolInfo[_pid];
-        UserInfo storage user = userInfo[_pid][msg.sender];
+        UserInfo storage user = userInfo[_pid][_msgSender()];
         updatePool(_pid);
-        updateUser(_pid, msg.sender);
-        if (user.amount > 0) {
-            uint256 pending = user
-                .amount
-                .mul(pool.accRivalPerShare)
-                .div(1e22)
-                .sub(user.rewardDebt);
-            if (pending > 0) {
-                safeRivalTransfer(msg.sender, pending);
-            }
+        updateUser(_pid, _msgSender());
+        uint256 pendingReward = pendingRival(_pid, _msgSender());
+        if (pendingReward > 0) {
+            uint256 harvestedAmount = safeRivalTransfer(_msgSender(), pendingReward);
+            user.pendingReward = pendingReward.sub(harvestedAmount);
         }
+
         if (_amount > 0) {
             uint256 balanceBefore = pool.lpToken.balanceOf(address(this));
             pool.lpToken.transferFrom(
-                address(msg.sender),
+                address(_msgSender()),
                 address(this),
                 _amount
             );
@@ -1011,50 +1015,49 @@ contract RivalMasterChef is Ownable {
             pool.lpSupply = pool.lpSupply.add(_amount);
         }
         user.rewardDebt = user.amount.mul(pool.accRivalPerShare).div(1e22);
-        emit Deposited(msg.sender, _pid, _amount);
+        emit Deposited(_msgSender(), _pid, _amount);
     }
 
     // Withdraw LP tokens from MasterChef.
     function withdraw(uint256 _pid, uint256 _amount) public {
         PoolInfo storage pool = poolInfo[_pid];
-        UserInfo storage user = userInfo[_pid][msg.sender];
+        UserInfo storage user = userInfo[_pid][_msgSender()];
         require(
             pool.lpSupply >= _amount,
             "withdraw: not good(pool balance not enough)"
         );
 
         updatePool(_pid);
-        updateUser(_pid, msg.sender);
+        updateUser(_pid, _msgSender());
 
         require(
             user.unlockedAmount >= _amount,
             "withdraw: not good(user unlocked balance not enough)"
         );
 
-        uint256 pending = user.amount.mul(pool.accRivalPerShare).div(1e22).sub(
-            user.rewardDebt
-        );
-
-        if (pending > 0) {
-            safeRivalTransfer(msg.sender, pending);
+        uint256 pendingReward = pendingRival(_pid, _msgSender());
+        if (pendingReward > 0) {
+            uint256 harvestedAmount = safeRivalTransfer(_msgSender(), pendingReward);
+            user.pendingReward = pendingReward.sub(harvestedAmount);
         }
+
         if (_amount > 0) {
             user.amount = user.amount.sub(_amount);
             user.unlockedAmount = user.unlockedAmount.sub(_amount);
             pool.lpSupply = pool.lpSupply.sub(_amount);
-            pool.lpToken.transfer(address(msg.sender), _amount);
+            pool.lpToken.transfer(_msgSender(), _amount);
         }
         user.rewardDebt = user.amount.mul(pool.accRivalPerShare).div(1e22);
-        emit Withdrawn(msg.sender, _pid, _amount);
+        emit Withdrawn(_msgSender(), _pid, _amount);
     }
 
     // Withdraw without caring about rewards. EMERGENCY ONLY.
     function emergencyWithdraw(uint256 _pid) public {
         PoolInfo storage pool = poolInfo[_pid];
-        UserInfo storage user = userInfo[_pid][msg.sender];
+        UserInfo storage user = userInfo[_pid][_msgSender()];
         pool.lpSupply = pool.lpSupply.sub(user.amount);
-        pool.lpToken.transfer(address(msg.sender), user.amount);
-        emit EmergencyWithdrawn(msg.sender, _pid, user.amount);
+        pool.lpToken.transfer(_msgSender(), user.amount);
+        emit EmergencyWithdrawn(_msgSender(), _pid, user.amount);
         user.amount = 0;
         user.unlockedAmount = 0;
         for (uint256 i = user.arrLockedUntil.length - 1; i >= 0; i--) {
@@ -1065,14 +1068,17 @@ contract RivalMasterChef is Ownable {
     }
 
     // Safe $RIVAL transfer function, just in case if rounding error causes pool to not have enough $RIVALs.
-    function safeRivalTransfer(address _to, uint256 _amount) internal {
-        minter.safeRivalTokenTransfer(_to, _amount);
+    function safeRivalTransfer(address _to, uint256 _amount)
+        internal
+        returns (uint256)
+    {
+        return minter.safeRivalTokenTransfer(_to, _amount);
     }
 
     function setFeeAddress(address _feeAddress) external {
-        require(msg.sender == feeAddress, "setFeeAddress: FORBIDDEN");
+        require(_msgSender() == feeAddress, "setFeeAddress: FORBIDDEN");
         feeAddress = _feeAddress;
-        emit FeeAddressUpdated(msg.sender, _feeAddress);
+        emit FeeAddressUpdated(_msgSender(), _feeAddress);
     }
 
     // Update start block number
@@ -1083,7 +1089,7 @@ contract RivalMasterChef is Ownable {
         for (uint256 pid = 0; pid < length; ++pid) {
             poolInfo[pid].lastRewardBlock = _startBlock;
         }
-        emit StartBlockUpdated(msg.sender, startBlock, _startBlock);
+        emit StartBlockUpdated(_msgSender(), startBlock, _startBlock);
         startBlock = _startBlock;
     }
 
@@ -1095,7 +1101,8 @@ contract RivalMasterChef is Ownable {
             "Emission value too high"
         );
         massUpdatePools();
-        emit EmissionRateUpdated(msg.sender, rivalPerBlock, _rivalPerBlock);
+        emit EmissionRateUpdated(_msgSender(), rivalPerBlock, _rivalPerBlock);
         rivalPerBlock = _rivalPerBlock;
     }
 }
+
